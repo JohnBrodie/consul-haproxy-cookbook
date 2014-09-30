@@ -1,0 +1,35 @@
+global
+    log /dev/log local5
+    maxconn 4096
+    user haproxy
+    group haproxy
+    stats socket /var/run/haproxy_stat.sock user root group root mode 700 level admin
+
+defaults
+    clitimeout 50000
+    contimeout 5000
+    log global
+    maxconn 2000
+    retries 3
+    srvtimeout 50000
+
+listen admin 0.0.0.0:10097
+    mode http
+    stats uri /
+
+<% @frontends.each do |name, port| %>
+frontend <%= name %>
+    bind 127.0.0.1:<%= port %>
+    mode http
+    option httplog
+    option httpclose
+    default_backend <%= name %>
+<% end %>
+
+<% @backends.each do |name, spec| %>
+backend <%= name %>
+    mode http
+    {{range .<%= name %>}}
+    {{.}}
+    {{end}}
+<% end %>

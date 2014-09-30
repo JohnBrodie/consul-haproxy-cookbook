@@ -1,0 +1,32 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+
+platforms:
+- name: ubuntu-12.04
+  driver_config:
+    network:
+    - ["private_network", { ip: "10.212.0.180" }]
+- name: ubuntu-14.04
+  driver_config:
+    network:
+    - ["private_network", { ip: "10.212.0.181" }]
+
+suites:
+- name: default
+  run_list:
+    - recipe[consul::default]
+    - recipe[haproxy::install_source]
+    - recipe[consul-haproxy::default]
+  attributes:
+    consul:
+      datacenter: Chalfont
+      bind_interface: eth0
+      advertise_interface: eth0
+    consul-haproxy:
+      config:
+        backends: { app: "release.webapp" }
+        frontends: { app: "12345" }
