@@ -16,7 +16,9 @@
 #
 
 # Git reference to download. Can be a commit hash, HEAD, tag, etc.
-default['consul-haproxy']['source_reference'] = 'tags/v0.1.0'
+# The default here is the commit merging multi-config support into master
+default['consul-haproxy']['source_reference'] = (
+    '21664b79e24089b90956b832438b54231aed1db4')
 
 # Directory to drop symlink to executable.
 default['consul-haproxy']['install_dir'] = '/usr/local/bin'
