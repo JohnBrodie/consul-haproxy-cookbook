@@ -18,4 +18,3 @@ include_recipe 'golang::default'
 
 include_recipe 'consul-haproxy::install_source'
 include_recipe 'consul-haproxy::configure_service'
-include_recipe 'consul-haproxy::run_service'
