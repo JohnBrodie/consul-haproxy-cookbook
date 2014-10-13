@@ -1,0 +1,2 @@
+ENABLED=1
+EXTRAOPTS=`for filename in \`find "<%= File.join(node['consul-haproxy']['haproxy']['config_dir'], node['consul-haproxy']['haproxy']['extra_config_dir']) %>" -type f\`; do echo "-f $filename"; done`

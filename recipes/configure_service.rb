@@ -44,46 +44,60 @@ directory node['consul-haproxy']['config']['path'] do
   action :create
 end
 
-backends = []
-node['consul-haproxy']['config']['backends'].each do |name, spec|
-  backends << "#{name}=#{spec}"
+# Create consul-haproxy log file
+file '/var/log/consul-haproxy.log' do
+  owner consul_haproxy_user
+  group consul_haproxy_group
+  mode '0644'
+  action :create
 end
 
-path = (node['consul-haproxy']['config']['haproxy_config_dir'] +
-        node['consul-haproxy']['config']['haproxy_config_filename'])
+# Create initial consul-haproxy configuration
+config_location = File.join(
+  node['consul-haproxy']['config']['path'],
+  node['consul-haproxy']['config']['filename']
+)
 
-# Create and write out the configuration for consul-haproxy
 json_config = {
   'address' => node['consul-haproxy']['config']['agent_address'],
-  'backends' => backends,
-  'path' => path,
-  'template' => node['consul-haproxy']['config']['haproxy_template'],
+  'backends' => [],
+  'paths' => [],
+  'templates' => [],
   'reload_command' => (
-    node['consul-haproxy']['config']['haproxy_reload_command'])
+    node['consul-haproxy']['haproxy']['reload_command'])
 }.to_json
-
-file File.join(node['consul-haproxy']['config']['path'],
-               node['consul-haproxy']['config']['filename']) do
+file config_location do
   owner consul_haproxy_user
   group consul_haproxy_group
   mode '0755'
   content json_config
-  action :create
+  action :create_if_missing
 end
 
-template_vars = {
-  'backends' => node['consul-haproxy']['config']['backends'],
-  'frontends' => node['consul-haproxy']['config']['frontends'],
-  'extras' => node['consul-haproxy']['extra_template_vars']
-}
+command = File.join(node['consul-haproxy']['install_dir'], 'consul-haproxy')
+config_file = File.join(
+  node['consul-haproxy']['config']['path'],
+  node['consul-haproxy']['config']['filename']
+)
 
-# Render the HAProxy template template (so now it's a GO template)
-template node['consul-haproxy']['config']['haproxy_template'] do
+# Create a Consul-HAProxy init script
+template '/etc/init.d/consul-haproxy' do
+  source 'default_consul_haproxy_init.erb'
   mode '0755'
-  source node['consul-haproxy']['template']
-  owner consul_haproxy_user
-  group consul_haproxy_group
-  cookbook node['consul-haproxy']['template_cookbook'] \
-    unless node['consul-haproxy']['template_cookbook'].nil?
-  variables template_vars
+  variables(command: command, args: "-f #{config_file}")
+end
+
+service 'consul-haproxy' do
+  supports status: true, restart: true
+  action :enable
+end
+
+# Add global HAProxy configuration
+global_config = File.join(
+  node['consul-haproxy']['haproxy']['config_dir'],
+  node['consul-haproxy']['haproxy']['global_config_filename']
+)
+template global_config do
+  source 'global_haproxy_template.cfg.erb'
+  mode '0644'
 end

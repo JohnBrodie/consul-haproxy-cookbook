@@ -1,0 +1,15 @@
+global
+<% node['consul-haproxy']['haproxy']['global'].each do | key, value | %>
+    <%= "#{key} #{value}" %>
+<% end %>
+
+defaults
+<% node['consul-haproxy']['haproxy']['defaults'].each do | key, value | %>
+    <%= "#{key} #{value}" %>
+<% end %>
+
+<% unless node['consul-haproxy']['haproxy']['admin']['port'].nil? %>
+    listen admin 0.0.0.0:<%= node['consul-haproxy']['haproxy']['admin']['port'] %>
+    mode http
+    stats uri /
+<% end %>

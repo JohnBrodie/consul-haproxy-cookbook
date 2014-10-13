@@ -21,12 +21,9 @@ suites:
     - recipe[consul::default]
     - recipe[haproxy::install_source]
     - recipe[consul-haproxy::default]
+    - recipe[test-cookbook::default]
   attributes:
     consul:
       datacenter: Chalfont
       bind_interface: eth0
       advertise_interface: eth0
-    consul-haproxy:
-      config:
-        backends: { app: "release.webapp" }
-        frontends: { app: "12345" }
